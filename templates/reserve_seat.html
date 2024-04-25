@@ -47,6 +47,27 @@
     </style>
 </head>
 <body>
+    <div class="seat-map">
+        <h2>Availability</h2>
+        <table>
+            {% for row in range(1, 13) %}
+                <tr>
+                    {% for column in range(1, 5) %}
+                        {% set seat_id = 'seat_' + row|string + '_' + column|string %}
+                        <td>
+                            {% if (row, column) in reserved_seats %}
+                                <div class="seat taken">X</div>
+                            {% else %}
+                                <div class="seat available">O</div>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+    
+    
     <form action="/reserve_seat" method="POST">
         <label for="first_name">First Name:</label>
         <input type="text" id="first_name" name="first_name" required><br>

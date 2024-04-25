@@ -59,7 +59,15 @@ def reserve_seat():
                            (f"{first_name} {last_name}", seat_row, seat_column, reservation_code))
             conn.commit()
         return render_template('reservation_success.html', reservation_code=reservation_code)
-    return render_template('reserve_seat.html')
+    else:
+        # Fetch reserved seats from the database
+        with sqlite3.connect('reservations.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT seatRow, seatColumn FROM reservations")
+            reserved_seats = cursor.fetchall()
+        
+        # Pass reserved seats data to the template
+        return render_template('reserve_seat.html', reserved_seats=reserved_seats)
 
 if __name__ == '__main__':
     app.run(debug=True)
