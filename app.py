@@ -7,9 +7,6 @@ app = Flask(__name__)
 conn = sqlite3.connect('reservations.db')
 cursor = conn.cursor()
 
-# Initialize admin credentials
-admin_username = "admin"
-admin_password = "admin123"
 
 # Function to generate cost matrix for flights
 def get_cost_matrix():
@@ -54,10 +51,13 @@ def reserve_seat():
         seat_column = int(request.form['seat_column'])
         # Generate reservation code
         reservation_code = f"{first_name.upper()}{last_name.upper()}-{seat_row}-{seat_column}"
-        # Insert reservation into reservations table
-        cursor.execute("INSERT INTO reservations (passengerName, seatRow, seatColumn, eTicketNumber) VALUES (?, ?, ?, ?)",
-                       (f"{first_name} {last_name}", seat_row, seat_column, reservation_code))
-        conn.commit()
+        # Create a new database connection and cursor
+        with sqlite3.connect('reservations.db') as conn:
+            cursor = conn.cursor()
+            # Insert reservation into reservations table
+            cursor.execute("INSERT INTO reservations (passengerName, seatRow, seatColumn, eTicketNumber) VALUES (?, ?, ?, ?)",
+                           (f"{first_name} {last_name}", seat_row, seat_column, reservation_code))
+            conn.commit()
         return render_template('reservation_success.html', reservation_code=reservation_code)
     return render_template('reserve_seat.html')
 

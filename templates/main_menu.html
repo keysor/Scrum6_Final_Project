@@ -7,8 +7,38 @@
 </head>
 <body>
     <h1>Main Menu</h1>
-    <h2>Welcome students. Reserve a seat by pressing the said button below.</h2>
-        <a href="{{ url_for('reserve_seat') }}"><button>Reserve a Seat</button></a>
-        <a href="{{ url_for('admin_login') }}"><button>Admin Login</button></a>
+    <h2>Welcome students! Reserve a seat by pressing the said button below.</h2>
+    <a href="reserve_seat"><button>Reserve a Seat</button></a>
+    <a href="admin_login"><button>Admin Login</button></a>
 </body>
 </html>
+<!-- CSS -->
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f0f0f0;
+    }
+    h1 {
+        color: #333;
+    }
+    h2 {
+        color: #666;
+    }
+    button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 10px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
