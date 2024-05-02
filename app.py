@@ -1,12 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, g
 import sqlite3
 
 app = Flask(__name__)
 
-# Connect to SQLite database
-conn = sqlite3.connect('reservations.db')
-cursor = conn.cursor()
+DATABASE = 'reservations.db'
 
+# Function to get database connection
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+# Close database connection at the end of each request
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+admin_username = "admin"
+admin_password = "admin123"
 
 # Function to generate cost matrix for flights
 def get_cost_matrix():
@@ -18,30 +32,37 @@ def calculate_total_sales():
     total_sales = sum(sum(row) for row in get_cost_matrix())
     return total_sales
 
-# Route for main menu
 @app.route('/')
 def main_menu():
     return render_template('main_menu.html')
 
-# Route for admin login
 @app.route('/admin_login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        if username == admin_username and password == admin_password:
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM admins WHERE username = ? AND password = ?", (username, password))
+        admin = cursor.fetchone()
+        cursor.close()
+        if admin:
             return redirect(url_for('admin_portal'))
+        else:
+            error_message = "Invalid username or password. Please try again."
+            return render_template('admin_login.html', error_message=error_message)
     return render_template('admin_login.html')
 
-# Route for admin portal
 @app.route('/admin_portal')
 def admin_portal():
     total_sales = calculate_total_sales()
+    db = get_db()
+    cursor = db.cursor()
     cursor.execute("SELECT * FROM reservations")
     reservations = cursor.fetchall()
+    cursor.close()
     return render_template('admin_portal.html', total_sales=total_sales, reservations=reservations)
 
-# Route for reservation form
 @app.route('/reserve_seat', methods=['GET', 'POST'])
 def reserve_seat():
     if request.method == 'POST':
@@ -59,15 +80,7 @@ def reserve_seat():
                            (f"{first_name} {last_name}", seat_row, seat_column, reservation_code))
             conn.commit()
         return render_template('reservation_success.html', reservation_code=reservation_code)
-    else:
-        # Fetch reserved seats from the database
-        with sqlite3.connect('reservations.db') as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT seatRow, seatColumn FROM reservations")
-            reserved_seats = cursor.fetchall()
-        
-        # Pass reserved seats data to the template
-        return render_template('reserve_seat.html', reserved_seats=reserved_seats)
+    return render_template('reserve_seat.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
